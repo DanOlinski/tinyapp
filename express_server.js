@@ -11,24 +11,31 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
-//Set the file for ejs to render from
+//hello page
+app.get("/", (req, res) => {
+  res.send("Hello!");
+});
+
+//hello world page
+app.get("/hello", (req, res) => {
+  res.send("<html><body>Hello <b>World</b></body></html>\n");
+});
+
+//this page displays to the client, the urlDatabase object in a very rough way
+app.get("/urls.json", (req, res) => {
+  res.json(urlDatabase);
+})
+
+//Render urls_index file to the browser. displays urlDatabase object in a neat way as a list within tables
 app.get("/urls", (req, res) => {
   const templateVars = { urls: urlDatabase };
   res.render("urls_index", templateVars);
 });
 
-app.get("/", (req, res) => {
-  res.send("Hello!");
-});
-
-//this shows to the client the urlDatabase object
-app.get("/urls.json", (req, res) => {
-  res.json(urlDatabase);
-})
-
-
-app.get("/hello", (req, res) => {
-  res.send("<html><body>Hello <b>World</b></body></html>\n");
+//NOT SURE IF THIS IS CORRECT
+app.get("/urls/:id", (req, res) => {
+  const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id] }
+  res.render("urls_show", templateVars);
 });
 
 //the method below sets the server to listen at predefined port 
