@@ -32,8 +32,10 @@ app.get("/urls", (req, res) => {
   res.render("urls_index", templateVars);
 });
 
-//NOT SURE IF THIS IS CORRECT
+//:id works as an argument anything placed in the url instead of :id will be replaced into where we have req.params.id 
+//test example http://localhost:8080/urls/b2xVn2
 app.get("/urls/:id", (req, res) => {
+  //the 1st key in the templateVars is used to display the short url retrieved from the url placed in the browser. The second key is used to display the entry belonging to the key inside urlDatabase that has an equal value to what is passed in the browser in the place of :id
   const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id] }
   res.render("urls_show", templateVars);
 });
