@@ -32,11 +32,12 @@
           </tr>
         </thead>
         <tbody>
-          
+
           <!-- for in loop through content in url key -->
           <% for (let id in urls) { %>
             <tr>
-              <td><%= id %></td>
+              <!-- each short url is set as a link. The link is created in the server js file under the rout /u:id. href is a link set to go to page /u:id however the page u:id instantaneously redirects the client to the long url printed beside the short url-->
+              <td><a href="/u/<%= id %>"><%= id %></a></td>
               <td><%= urls[id] %></td>
             </tr>
           <% } %>

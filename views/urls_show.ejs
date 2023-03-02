@@ -19,11 +19,11 @@
       <div class="card-header"></div>
       <div class="card-body">
 
-        <!-- displays long url -->
+        <!-- displays long url to client-->
         <h5 class="card-title">TinyURL for: <%= longURL %></h5>
         <p class="card-text">
-          
-          <!-- displays short url -->
+
+          <!-- displays short url to client in the form of a link. The link is created in the server js file under the rout /u:id. href is a link set to go to page /u:id however the page u:id instantaneously redirects the client to the long url printed above-->
           Short URL ID: <a href="/u/<%= id %>"><%= id %></a>
         </p>
       </div>
