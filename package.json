@@ -4,10 +4,11 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "start": "./node_modules/.bin/nodemon -L express_server.js",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon express_server.js"
+    "dev": "./node_modules/.bin/nodemon -L express_server.js"
   },
-  "repository": {
+  "repository": { 
     "type": "git",
     "url": "git+https://github.com/DanOlinski/tinyapp.git"
   },
