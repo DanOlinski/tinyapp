@@ -63,17 +63,25 @@ app.post("/urls", (req, res) => {
 
 //The rout below connects to a delete button and removes the corresponding url key pair from the urlDatabase object
 app.post("/urls/:id/delete", (req, res) => {
-  const shortURL = req.params.id
-  delete urlDatabase[shortURL]
+  const shortURL = req.params.id;
+  delete urlDatabase[shortURL];
   res.redirect(`/urls`);
 });
 
 //INFO HERE
-app.post("/urls/:id/update", (req, res) => {
-  const shortURL = req.params.id
-  const longURL = req.body.longURL
-  urlDatabase[shortURL] = longURL
+app.post("/urls/:id/edit", (req, res) => {
+  const shortURL = req.params.id;
+  const longURL = urlDatabase[shortURL];
+  urlDatabase[shortURL] = longURL;
   res.redirect(`/urls/${shortURL}`);
+});
+
+//this .post rout handles info typed by the client in the urls_show.ejs, updating the long url referenced by a specified short url, this function can be accessed by clicking the Edit button in the urls_index.ejs page
+app.post("/urls/:id/update", (req, res) => {
+  const shortURL = req.params.id;
+  const longURL = req.body.longURL;
+  urlDatabase[shortURL] = longURL;
+  res.redirect(`/urls`);
 });
 
 //This page is set as a link in the files urls_show and urls_index. when the links redirects to this page :id is replaced with the short url(through the use of req.params.id). The short url is a key corresponding to an actual url and this page redirects the client to the url value that corresponds to the short url key.

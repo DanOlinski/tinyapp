@@ -30,6 +30,7 @@
           <tr>
             <th scope="col">Short URL ID</th>
             <th scope="col">Long URL</th>
+            <th scope="col">Edit</th>
             <th scope="col">Delete</th>
           </tr>
         </thead>
@@ -40,23 +41,27 @@
             <tr>
               <!-- each short url is set as a link. The link is created in the server js file under the rout /u:id. href is a link set to go to page /u:id however the page u:id instantaneously redirects the client to the long url printed beside the short url-->
               <td><a href="/u/<%= id %>"><%= id %></a></td>
-              <td><%= urls[id] %></td>
-              <td>
+              <td style="max-width: 300px; overflow-wrap: break-word"><%= urls[id] %></td>
 
-                <!-- The form contains a button that takes the short url and sends it to the server so that the key pair can be deleted from the urlDatabase object -->
-                <form method="POST" action="/urls/<%= id %>/delete">
-                  <button type="submit" class="btn btn-outline-danger">Delete</button>
+              <!-- The form contains a button redirects the client to urls_show.ejs -->
+              <td>
+                <form method="POST" action="/urls/<%= id %>/edit">
+                  <button type="submit" class="btn btn-outline-primary">Edit
+                  </button>
                 </form>
-                
+              </td>
+
+              <!-- The form contains a button that takes the short url and sends it to the server so that the key pair can be deleted from the urlDatabase object -->
+              <td>
+                <form method="POST" action="/urls/<%= id %>/delete">
+                  <button type="submit" class="btn btn-outline-danger">Delete
+                  </button>
+                </form>
               </td>
             </tr>
           <% } %>
         </tbody>
       </table>
-
-      
-
-
     </main>
 
     <!-- Components to run Bootstrap JS -->

@@ -30,11 +30,11 @@
       </div>
       <div class="card-footer text-muted">
 
-        <!-- INFO HERE HOW TO CENTER FORM-->
+        <!-- this form shows as a box that takes in text typed by the client, here the client can change the long url corresponding to a short url. The objective of this button is so that the client has the option of updating info in the page-->
         <h4 class="card-title">
           Edit
         </h5>
-        <form class="form-inline" action="/urls/<%= id %>/update" method="POST">
+        <form class="form-inline" style="justify-content: center;" action="/urls/<%= id %>/update" method="POST">
           <label for="longURL">New a URL:</label>
           <input
             class="form-control"
@@ -47,12 +47,6 @@
         </form>
       </div>
     </div>
-
-      
-   
-  
-
-
 
     <!-- Bootstrap JS -->
     <script
