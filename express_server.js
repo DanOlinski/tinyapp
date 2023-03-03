@@ -54,6 +54,16 @@ app.get("/urls/new", (req, res) => {
   res.render("urls_new");
 });
 
+//The rout below logs the user and saves info as cookies
+//to check the data saved: use the inspect tool in chrome
+app.post("/login", (req, res) => {
+  const username = req.body.username;
+  console.log(username)
+  res
+  .cookie(username, 'user') 
+  .redirect(`/urls`); 
+});
+
 //Handle the data sent from client to the server, this data is coming from page /urls/new or file urls_new.ejs The data received is saved in the object urlDatabase, then client is redirected to /urls/:id contained in urls_show.ejs file
 app.post("/urls", (req, res) => {
   const shortURL = generateRandomString();
@@ -68,7 +78,7 @@ app.post("/urls/:id/delete", (req, res) => {
   res.redirect(`/urls`);
 });
 
-//INFO HERE
+//The rout below connects to a edit button redirecting the client to urls_show.ejs page where they can change the long url associated to the short url selected by the client
 app.post("/urls/:id/edit", (req, res) => {
   const shortURL = req.params.id;
   const longURL = urlDatabase[shortURL];
