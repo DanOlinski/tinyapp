@@ -61,7 +61,14 @@ app.post("/urls", (req, res) => {
   res.redirect(`/urls/${shortURL}`);
 });
 
-//This page is set as a link in the files urls_show and urls_index. when the links redirect to this page :id is replaced with the short url. The short url is a key corresponding to an actual url and this page redirects the client to the url value that corresponds to the short url key.
+//INFO HERE
+app.post("/urls/:id/delete", (req, res) => {
+  const shortURL = req.params.id
+  delete urlDatabase[shortURL]
+  res.redirect(`/urls`);
+});
+
+//This page is set as a link in the files urls_show and urls_index. when the links redirects to this page :id is replaced with the short url(through the use of req.params.id). The short url is a key corresponding to an actual url and this page redirects the client to the url value that corresponds to the short url key.
 app.get("/u/:id", (req, res) => {
   const longURL = urlDatabase[req.params.id];
   res.redirect(longURL);
