@@ -43,7 +43,7 @@
               <td><%= urls[id] %></td>
               <td>
 
-                <!-- INFO HERE -->
+                <!-- The form contains a button that takes the short url and sends it to the server so that the key pair can be deleted from the urlDatabase object -->
                 <form method="POST" action="/urls/<%= id %>/delete">
                   <button type="submit" class="btn btn-outline-danger">Delete</button>
                 </form>

@@ -61,7 +61,7 @@ app.post("/urls", (req, res) => {
   res.redirect(`/urls/${shortURL}`);
 });
 
-//INFO HERE
+//The rout below connects to a delete button and removes the corresponding url key pair from the urlDatabase object
 app.post("/urls/:id/delete", (req, res) => {
   const shortURL = req.params.id
   delete urlDatabase[shortURL]
