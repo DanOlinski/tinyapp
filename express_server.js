@@ -6,6 +6,8 @@ var cookieParser = require('cookie-parser')
 //the app.get and app.post functions below have to be placed in the correct order since one function depends on the next
 const app = express();
 const PORT = 8080; // default port
+
+//When using cookie-parser modules like clearCookie this function is accessing a variable that points to the cookie files (user: req.cookies["user"]). this variable is called in the _header.ejs page and since the header page runs on all pages that have res.render these pages need to access the user variable, so this variable needs to be included in the code (check below for modules that have the user variable declared as an example of this explanation)
 app.use(cookieParser())
 
 //data received from client needs to be decrypted using express.use and the buffer/client data will be placed into req object under req.body.<name>. Name is defined in the ejs file inside <form>. Another way to access information is by using req.params.<id>(check example below).
@@ -72,7 +74,8 @@ app.post("/logout", (req, res) => {
 
 //Render a page with a box for the user to enter data. in the page /urls/new there is a button that sends that data back to the server
 app.get("/urls/new", (req, res) => {
-  res.render("urls_new");
+  const templateVars = { user: req.cookies["user"] };
+  res.render("urls_new", templateVars);
 });
 
 //Handle the data sent from client to the server, this data is coming from page /urls/new or file urls_new.ejs The data received is saved in the object urlDatabase, then client is redirected to /urls/:id contained in urls_show.ejs file
@@ -87,7 +90,7 @@ app.post("/urls", (req, res) => {
 //test example http://localhost:8080/urls/b2xVn2
 app.get("/urls/:id", (req, res) => {
   //the 1st key in the templateVars is used to display the short url. The second key is used to display the entry belonging to the key(short url) inside urlDatabase that has an equal value to what is passed in the form by the client.
-  const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id] };
+  const templateVars = { user: req.cookies["user"], id: req.params.id, longURL: urlDatabase[req.params.id] };
   res.render("urls_show", templateVars);
 });
 
