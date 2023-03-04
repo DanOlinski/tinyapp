@@ -24,7 +24,7 @@
         <h5 class="card-title">TinyURL for: <%= longURL %></h5>
         <p class="card-text">
 
-          <!-- displays short url to client in the form of a link. The link is created in the server js file under the rout /u:id. href is a link set to go to page /u:id however the page u:id instantaneously redirects the client to the long url printed above-->
+          <!-- ****displays short url to client in the form of a link. The link is created in the server js file under the rout /u:id. href is a link set to go to page /u:id however the page u:id instantaneously redirects the client to the long url printed above. A value is set to id: in the app.post("/urls") method inside the server js file-->
           Short URL ID: <a href="/u/<%= id %>"><%= id %></a>
         </p>
       </div>
