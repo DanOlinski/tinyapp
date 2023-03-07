@@ -22,6 +22,15 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
+//keep track of registered users
+const users = {
+  userRandomID: {
+    id: 'userRandomID',
+    email: 'user@example.com',
+    password: 'purple-monkey-dinosaur',
+  },
+}
+
 //this function generates a random string of 6 characters
 const generateRandomString = function() {
   let result = '';
@@ -44,7 +53,7 @@ app.listen(PORT, () => {
 app.get("/urls", (req, res) => {
   
   //The object below stores the user key(defined in the module below, but it's retrieving this info from the cookie files through the use of cookie-parser npm package, this info is called in the _header.ejs file)
-  const templateVars = { user: req.cookies["user"], urls: urlDatabase };
+  const templateVars = { user: users[req.cookies["user"]], urls: urlDatabase };
   res.render("urls_index", templateVars);
 });
 
@@ -64,7 +73,7 @@ app.post("/logout", (req, res) => {
 
 //Render a page with a box for the user to enter data. in the page /urls/new there is a button that sends that data back to the server
 app.get("/urls/new", (req, res) => {
-  const templateVars = { user: req.cookies["user"] };
+  const templateVars = { user: users[req.cookies["user"]] };
   res.render("urls_new", templateVars);
 });
 
@@ -75,17 +84,19 @@ app.post("/urls", (req, res) => {
   res.redirect(`/urls/${shortURL}`);
 });
 
-//info here
+//this rout renders a registry page
 app.get("/urls/register", (req, res) => {
-  const templateVars = { user: req.cookies["user"] };
+  const templateVars = { user: users[req.cookies["user"]] };
   res.render("urls_register", templateVars)
 });
 
-//info here
+//the following rout saves user information into users object and saves a user ID number as a cookie file, this ID number is used to identify the logged user in the users object and retrieve data related to the logged user. this rout redirects the user to /urls page
 app.post("/register", (req, res) => {
+  id = generateRandomString()
   email = req.body.email
   password = req.body.password
-  res.cookie('user', email)
+  users[id] = { id: id, 'email': email, 'password': password}
+  res.cookie('user', id)
   res.redirect('/urls')
 });
 
@@ -94,7 +105,7 @@ app.post("/register", (req, res) => {
 //test example http://localhost:8080/urls/b2xVn2
 app.get("/urls/:id", (req, res) => {
   //the 1st key in the templateVars is used to display the short url. The second key is used to display the entry belonging to the key(short url) inside urlDatabase that has an equal value to what is passed in the form by the client.
-  const templateVars = { user: req.cookies["user"], id: req.params.id, longURL: urlDatabase[req.params.id] };
+  const templateVars = { user: users[req.cookies["user"]], id: req.params.id, longURL: urlDatabase[req.params.id] };
   res.render("urls_show", templateVars);
 });
 
