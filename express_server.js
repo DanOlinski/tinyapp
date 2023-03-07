@@ -35,19 +35,9 @@ const generateRandomString = function() {
   return result;
 };
 
-//hello page
-app.get("/", (req, res) => {
-  res.send("Hello!");
-});
-
-//hello world page
-app.get("/hello", (req, res) => {
-  res.send("<html><body>Hello <b>World</b></body></html>\n");
-});
-
-//this page displays/routs to the client, the urlDatabase object in a very rough way
-app.get("/urls.json", (req, res) => {
-  res.json(urlDatabase);
+//the method below sets the server to listen at predefined port
+app.listen(PORT, () => {
+  console.log(`Example app listening on port ${PORT}!`);
 });
 
 //Render urls_index file to the browser. displays urlDatabase object in a neat way as a list within tables. This is the home page of the app
@@ -83,6 +73,20 @@ app.post("/urls", (req, res) => {
   const shortURL = generateRandomString();
   urlDatabase[shortURL] = req.body.longURL;
   res.redirect(`/urls/${shortURL}`);
+});
+
+//info here
+app.get("/urls/register", (req, res) => {
+  const templateVars = { user: req.cookies["user"] };
+  res.render("urls_register", templateVars)
+});
+
+//info here
+app.post("/register", (req, res) => {
+  email = req.body.email
+  password = req.body.password
+  res.cookie('user', email)
+  res.redirect('/urls')
 });
 
 //:id works as an argument/variable/placeholder. :id = req.params.id
@@ -123,7 +127,3 @@ app.post("/urls/:id/update", (req, res) => {
   res.redirect(`/urls`);
 });
 
-//the method below sets the server to listen at predefined port
-app.listen(PORT, () => {
-  console.log(`Example app listening on port ${PORT}!`);
-});
