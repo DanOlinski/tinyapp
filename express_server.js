@@ -44,6 +44,18 @@ const generateRandomString = function() {
   return result;
 };
 
+//The function checks if an email exists in the users object. If the user does exist it returns the information of that user
+const userLookup = function(email) {
+  for(let i in users){
+    for(let j in users[i]){
+      if(users[i][j] === email && email !== ''){
+        return users[i]
+      }
+    }
+  }
+  return null
+}
+
 //the method below sets the server to listen at predefined port
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
@@ -92,12 +104,23 @@ app.get("/urls/register", (req, res) => {
 
 //the following rout saves user information into users object and saves a user ID number as a cookie file, this ID number is used to identify the logged user in the users object and retrieve data related to the logged user. this rout redirects the user to /urls page
 app.post("/register", (req, res) => {
-  id = generateRandomString()
-  email = req.body.email
-  password = req.body.password
-  users[id] = { id: id, 'email': email, 'password': password}
-  res.cookie('user', id)
-  res.redirect('/urls')
+  let id = generateRandomString()
+  let email = req.body.email
+  let password = req.body.password
+
+  //this statement handles errors (empty fields, user already registered)
+  if(!email || !password || userLookup(email)){
+    res.redirect('/400')
+  } else {
+    users[id] = { 'id': id, 'email': email, 'password': password}
+    res.cookie('user', id)
+    res.redirect('/urls')
+  }
+});
+
+//render 404 page
+app.get("/400", (req, res) => {
+  res.render("400");
 });
 
 //:id works as an argument/variable/placeholder. :id = req.params.id
