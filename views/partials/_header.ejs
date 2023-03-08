@@ -20,11 +20,11 @@
     </div>
 
     <!--The statement below checks if there is a user saved in the cookies, and displays either the logged username or a login button-->
-    <% if (user) { %>
+    <% if (userId) { %>
       <h6>
-        Logged in as:
+        Logged In As:
         &#160
-        <%= user.email %>
+        <%= userId.email %>
       </h6>
       &#160&#160&#160
       <form method="POST" action="/logout">
@@ -33,10 +33,11 @@
       </form>
     <% }else { %> 
     
-    <!--if there is no user logged in a button will be available to redirect the user to a login or register page-->
-        <a href="/urls/login" class="btn btn-outline-dark">Login</a>
-        &#160
-        <a href="/urls/register" class="btn btn-outline-dark">Register</a>
-      <% } %>
+      <!--if there is no user logged in a button will be available to redirect the user to a login or register page-->
+      <div class="navbar-nav">
+        <a href="/urls/login" class="nav-item nav-link">Login</a>
+        <a href="/urls/register" class="nav-item nav-link">Register</a>
+      </div>  
+    <% } %>
   </nav>
 </header>
