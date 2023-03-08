@@ -16,7 +16,7 @@
       crossorigin="anonymous"
     />
 
-    <title>Register - TinyApp</title>
+    <title>Login - TinyApp</title>
   </head>
 
   <body>
@@ -26,10 +26,10 @@
     </header>
 
     <main style="margin: 1em;">
-      <h3>Register New User</h3>
+      <h3>Login</h3>
 
-      <!-- this form registers a new user-->
-      <form action="/register" method="POST" style="width: 300px; margin: 1em">
+      <!-- this form logs in an existing user-->
+      <form action="/login" method="POST" style="width: 300px; margin: 1em">
         <div class="mb-3">
           &#160&#160&#160
           <label class="form-label" for="email">email:</label>
@@ -53,7 +53,7 @@
         <div class="mb-3">
           <!-- this button will submit the form data to the server it will be stored inside req.body.email and req.body.password-->
           &#160&#160&#160
-          <button type="submit" class="btn btn-primary">Submit</button>
+          <button type="submit" class="btn btn-primary">Login</button>
         </div>
       </form>
     </main>

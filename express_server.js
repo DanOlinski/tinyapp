@@ -69,15 +69,30 @@ app.get("/urls", (req, res) => {
   res.render("urls_index", templateVars);
 });
 
-//The rout below logs the user and saves info as cookies. This form is inside _header.ejs file
+//the rout renders a login page
+app.get('/urls/login', (req, res) => {
+  const templateVars = { user: users[req.cookies["user"]] }
+  res.render('urls_login', templateVars)
+})
+
+//The rout below logs the user and saves id as a cookie.
 //to check the data/cookies saved: use the inspect tool in chrome /Application/Cookies
 app.post("/login", (req, res) => {
-  const username = req.body.username;
-  res.cookie('user', username); 
-  res.redirect(`/urls`); 
+  const emailInput = req.body.email;
+  const passwordInput = req.body.password
+  const user = userLookup(emailInput)
+  
+  //this statement handles errors (empty fields, incorrect password, user not registered)
+  if(!emailInput || !passwordInput || user === null || passwordInput !== user.password){
+    res.redirect('/400')
+  } else { 
+    const id = user.id
+    res.cookie('user', id)
+    res.redirect('/urls')
+  }
 });
 
-//The rout below logs out the user by deleting saved cookies
+//The rout below logs out the user by deleting saved cookie
 app.post("/logout", (req, res) => {
   res.clearCookie("user")
   res.redirect(`/urls`); 

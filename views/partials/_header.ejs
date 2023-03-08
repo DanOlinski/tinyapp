@@ -16,13 +16,10 @@
       <div class="navbar-nav">
         <a class="nav-item nav-link" href="/urls">My URLs</a>
         <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
-
-        <!--REMOVE THIS-->
-        <a class="nav-item nav-link" href="/urls/register">register</a>
       </div>
     </div>
 
-    <!--The statement below checks if there is a user saved in the cookies, and displays either the logged username or a sign in form-->
+    <!--The statement below checks if there is a user saved in the cookies, and displays either the logged username or a login button-->
     <% if (user) { %>
       <h6>
         Logged in as:
@@ -36,18 +33,10 @@
       </form>
     <% }else { %> 
     
-    <!--add a user by inputting a username into a form that includes a button. The user info is stored as cookies-->
-    <form class="form-inline" action="/login" method="POST">
-      <div class="form-group mb-2">
-        <input
-          class="form-control"
-          type="text"
-          name="username"
-          placeholder="username"
-          style="width: 120px; margin: 1em"
-        />
-        <button type="submit" class="btn btn-outline-dark">Login</button>
-      </form> 
+    <!--if there is no user logged in a button will be available to redirect the user to a login or register page-->
+        <a href="/urls/login" class="btn btn-outline-dark">Login</a>
+        &#160
+        <a href="/urls/register" class="btn btn-outline-dark">Register</a>
       <% } %>
   </nav>
 </header>
