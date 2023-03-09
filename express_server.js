@@ -74,6 +74,11 @@ app.get("/urls", (req, res) => {
 //the rout renders a login page
 app.get('/urls/login', (req, res) => {
   const templateVars = { userId: users[req.cookies["user_id"]] };
+
+  //if user is logged don't enter login page
+  if(templateVars.userId){
+  return res.redirect('/urls')  
+  }
   return res.render('urls_login', templateVars);
 });
 
@@ -88,10 +93,15 @@ app.post("/login", (req, res) => {
     return res.status(400).send("Error 400: Empty field(s)");
   }
  
-  //this statement handles errors (incorrect password, user not registered)
+  //this statement handles errors (user not registered)
   const user = userLookup(emailInput);
-  if (user === null || passwordInput !== user.password) {
-    return res.status(403).send("Error 403");
+  if (user === null) {
+    return res.status(403).send("Error 403: User not registered");
+  }
+
+  //this statement handles errors (incorrect password)
+  if (passwordInput !== user.password) {
+    return res.status(403).send("Error 403: Incorrect password");
   } else {
     res.cookie('user_id', user.id);
     return res.redirect('/urls');
@@ -107,12 +117,23 @@ app.post("/logout", (req, res) => {
 //Render a page with a box for the user to enter data. in the page /urls/new there is a button that sends that data back to the server using post method
 app.get("/urls/new", (req, res) => {
   const templateVars = { userId: users[req.cookies["user_id"]] };
+
+  //if user is not logged in block urls/new page
+  if(!templateVars.userId){
+    return res.redirect('/urls/login')  
+    }
   return res.render("urls_new", templateVars);
 });
 
 //Handle the data sent from client to the server, this data is coming from page /urls/new or file urls_new.ejs The data received is saved in the object urlDatabase, then client is redirected to /urls/:id contained in urls_show.ejs file
 app.post("/urls", (req, res) => {
   const shortURL = generateRandomString();
+  loggedUser = req.cookies["user_id"]
+  
+  //if user is not logged in block the feature from this .post method by redirecting to /urls/:id/update, there is handles a non logged user attempting tu use this feature.
+  if(!loggedUser) {
+    return res.redirect(`/urls/${shortURL}/update`)
+  }
   urlDatabase[shortURL] = req.body.longURL;
   return res.redirect(`/urls/${shortURL}`);
 });
@@ -120,6 +141,11 @@ app.post("/urls", (req, res) => {
 //this rout renders a registry page
 app.get("/urls/register", (req, res) => {
   const templateVars = { userId: users[req.cookies["user_id"]] };
+
+  //if user is logged block register page
+  if(templateVars.userId){
+    return res.redirect('/urls')  
+    }
   return res.render("urls_register", templateVars);
 });
 
@@ -128,9 +154,14 @@ app.post("/register", (req, res) => {
   let email = req.body.email;
   let password = req.body.password;
 
-  //this statement handles errors (empty fields, user already registered)
-  if (!email || !password || userLookup(email)) {
-    return res.status(400).send("Error 400");
+  //this statement handles errors (user already registered)
+  if (userLookup(email)) {
+    return res.status(400).send("Error 400: user already registered");
+  }
+  
+  //this statement handles errors (empty fields)
+  if (!email || !password) {
+    return res.status(400).send("Error 400: empty field(s)");
   } else {
     let id = generateRandomString();
     users[id] = { 'id': id, 'email': email, 'password': password};
@@ -144,14 +175,23 @@ app.post("/register", (req, res) => {
 //test example http://localhost:8080/urls/b2xVn2
 app.get("/urls/:id", (req, res) => {
   //the 1st key in the templateVars is used to display the short url. The 3rd key is used to display the entry belonging to the key(short url) inside urlDatabase that has an equal value to what is passed in the form by the client in urls_new.ejs file.
-  const templateVars = { userId: users[req.cookies["user_id"]], id: req.params.id, longURL: urlDatabase[req.params.id] };
+  const templateVars = { userId: users[req.cookies["user_id"]], id: req.params.id, longURL: urlDatabase[req.params.id], message: '' };
+  
   return res.render("urls_show", templateVars);
 });
 
 //This page is set as a link in the files urls_show and urls_index. when the links redirects to this page :id is replaced with the short url(that key value is accessed through the use of req.params.id)(a value is set to id: in the app.post("/urls") method declared above). The short url is a key corresponding to an actual url and this page redirects the client to the url value that corresponds to the short url key.
 app.get("/u/:id", (req, res) => {
   const longURL = urlDatabase[req.params.id];
-  return res.redirect(longURL);
+  
+  //if a short url that doesn't exist is accessed an error will be generated to handle this.
+  for(let i in urlDatabase){
+    if(urlDatabase[i] === longURL){
+      console.log(urlDatabase[i])
+      return res.redirect(longURL);
+    } 
+  }
+  return res.status(403).send("Error 403: short url does not exist");
 });
 
 //The rout below connects to a delete button and removes the corresponding url key pair from the urlDatabase object in the home page
@@ -171,9 +211,17 @@ app.post("/urls/:id/edit", (req, res) => {
 
 //this .post rout handles info typed by the client in the urls_show.ejs, updating the long url referenced to a specified short url, this function can be accessed in the urls_show.ejs file page
 app.post("/urls/:id/update", (req, res) => {
+  const userId = req.cookies['user_id']
   const shortURL = req.params.id;
   const longURL = req.body.longURL;
+  
+  //if user is not logged in block this feature
+  if(!userId){
+    return res.redirect(`/urls/${shortURL}`);
+  }
+  
   urlDatabase[shortURL] = longURL;
+
   return res.redirect(`/urls`);
 });
 
