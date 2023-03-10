@@ -1,6 +1,9 @@
 //This app takes in a url typed by a user in a browser interface, and generates a random string of 6 characters. That 6 character string is set as a shorter version of the url typed by the client. That shorter url is displayed as a link that redirects the client to the corresponding url. A user can also log in and register as a new user into the app.
 const express = require("express");
 
+//password hashing method
+const bcrypt = require("bcryptjs");
+
 //cookie-parser handles information saved as cookies
 let cookieParser = require('cookie-parser');
 
@@ -82,7 +85,7 @@ app.listen(PORT, () => {
 
 //Render urls_index file to the browser. displays urlDatabase object in a neat way as a list within tables. This is the home page of the app
 app.get("/urls", (req, res) => {
-  const userId = req.cookies["user_id"]
+  const userId = users[req.cookies["user_id"]]
   const userDatabase = urlsForUser(userId)
 
   //The object below stores the user key(it's retrieving this info from the cookie files through the use of cookie-parser npm package, this info is called in the _header.ejs file)
@@ -101,7 +104,7 @@ app.get('/urls/login', (req, res) => {
   return res.render('urls_login', templateVars);
 });
 
-//The rout below logs the user(retrieving info from users object) and the user id as a cookie.
+//The rout below logs the user(retrieving info from user_id cookie object).
 //to check the data/cookies saved: use the inspect tool in chrome /Application/Cookies in the browser
 app.post("/login", (req, res) => {
   const emailInput = req.body.email;
@@ -112,18 +115,18 @@ app.post("/login", (req, res) => {
     return res.status(400).send("Error 400: Empty field(s)");
   }
  
+  const userId = userLookup(emailInput)
   //this statement handles errors (user not registered)
-  const user = userLookup(emailInput);
-  if (user === null) {
+  if (userId === null) {
     return res.status(403).send("Error 403: User not registered");
   }
 
   //this statement handles errors (incorrect password)
-  if (passwordInput !== user.password) {
-    return res.status(403).send("Error 403: Incorrect password");
-  } else {
-    res.cookie('user_id', user.id);
+  if (bcrypt.compareSync(passwordInput, userId['password'])) {
+    res.cookie('user_id', userId.id);
     return res.redirect('/urls');
+  } else {
+    return res.status(403).send("Error 403: Incorrect password");
   }
 });
 
@@ -162,7 +165,7 @@ app.post("/urls", (req, res) => {
 app.get("/urls/register", (req, res) => {
   const templateVars = { userId: users[req.cookies["user_id"]] };
 
-  //if user is logged block register page
+  //if user is logged in block register page
   if(templateVars.userId){
     return res.redirect('/urls')  
     }
@@ -173,6 +176,7 @@ app.get("/urls/register", (req, res) => {
 app.post("/register", (req, res) => {
   let email = req.body.email;
   let password = req.body.password;
+  const hashedPassword = bcrypt.hashSync(password, 10);
 
   //this statement handles errors (user already registered)
   if (userLookup(email)) {
@@ -183,8 +187,9 @@ app.post("/register", (req, res) => {
   if (!email || !password) {
     return res.status(400).send("Error 400: empty field(s)");
   } else {
+    //this function generates a random string ans stores that string as a unique ID for the user
     let id = generateRandomString();
-    users[id] = { 'id': id, 'email': email, 'password': password};
+    users[id] = { 'id': id, 'email': email, 'password': hashedPassword};
     res.cookie('user_id', id);
     return res.redirect('/urls');
   }

@@ -61,11 +61,11 @@
                 </td>
               </tr>
             <% } %>
-        <% } else if(Object.keys(userDatabase).length === 0) { %>
+        <% } else if(Object.keys(userDatabase).length === 0 && userId) { %>
           <div class="text-center">
             <h6><a class="text-primary" a href="/urls/new">Create New URL</a></h6>
           </div>
-        <% } else { %>
+        <% } else if(!userId) { %>
           <div class="text-center">
             <h6 class="text-danger">Login or Register</h6>
           </div>
