@@ -18,10 +18,16 @@ app.use(express.urlencoded({ extended: true }));
 //declaration below tells express.set module that HTML code will be rendered by ejs
 app.set("view engine", "ejs");
 
-//keep  trackand store all URLs and shortened forms provided by the user
+//keep  track and store all URLs and shortened forms provided by the user
 const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+  b2xVn2: {
+    longURL: "http://www.lighthouselabs.ca",
+    userId: "aJ48lW",
+  },
+  i3BoGr: {
+    longURL: "https://www.google.ca",
+    userId: "aJ48lW",
+  },
 };
 
 //keep track of registered users
@@ -58,6 +64,17 @@ const userLookup = function(email) {
   return null;
 };
 
+//The function below checks the urlsDatabase and returns the urls that were saved by a specific user
+const urlsForUser = function(id) {
+  const data = {}
+  for(let i in urlDatabase){
+    if(id === urlDatabase[i]['userId']) {
+      data[i] = urlDatabase[i]
+    }
+  }
+  return data  
+}
+
 //the method below sets the server to listen at a predefined port
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
@@ -65,9 +82,11 @@ app.listen(PORT, () => {
 
 //Render urls_index file to the browser. displays urlDatabase object in a neat way as a list within tables. This is the home page of the app
 app.get("/urls", (req, res) => {
-  
+  const userId = req.cookies["user_id"]
+  const userDatabase = urlsForUser(userId)
+
   //The object below stores the user key(it's retrieving this info from the cookie files through the use of cookie-parser npm package, this info is called in the _header.ejs file)
-  const templateVars = { userId: users[req.cookies["user_id"]], urls: urlDatabase };
+  const templateVars = { 'userId': userId, 'userDatabase': userDatabase };
   return res.render("urls_index", templateVars);
 });
 
@@ -128,13 +147,14 @@ app.get("/urls/new", (req, res) => {
 //Handle the data sent from client to the server, this data is coming from page /urls/new or file urls_new.ejs The data received is saved in the object urlDatabase, then client is redirected to /urls/:id contained in urls_show.ejs file
 app.post("/urls", (req, res) => {
   const shortURL = generateRandomString();
-  loggedUser = req.cookies["user_id"]
+  const loggedUser = req.cookies["user_id"]
   
-  //if user is not logged in block the feature from this .post method by redirecting to /urls/:id/update, there is handles a non logged user attempting tu use this feature.
+  //if user is not logged in, block the feature from this .post method by redirecting to /urls where there is a message asking user to login or register.
   if(!loggedUser) {
-    return res.redirect(`/urls/${shortURL}/update`)
+    return res.redirect(`/urls`)
   }
-  urlDatabase[shortURL] = req.body.longURL;
+
+  urlDatabase[shortURL] = {longURL: req.body.longURL, userId: loggedUser};
   return res.redirect(`/urls/${shortURL}`);
 });
 
@@ -174,20 +194,32 @@ app.post("/register", (req, res) => {
 //The page below is accessed when clicking the submit button in page /urls/new(that is where a key pair is created, the key is passed as the :id when redirected to this page (a value is set to id: in the app.post("/urls") method declared above). Also check note in urls_show with ****).
 //test example http://localhost:8080/urls/b2xVn2
 app.get("/urls/:id", (req, res) => {
-  //the 1st key in the templateVars is used to display the short url. The 3rd key is used to display the entry belonging to the key(short url) inside urlDatabase that has an equal value to what is passed in the form by the client in urls_new.ejs file.
-  const templateVars = { userId: users[req.cookies["user_id"]], id: req.params.id, longURL: urlDatabase[req.params.id], message: '' };
-  
+  const userId = req.cookies['user_id']
+    
+  //if user is not logged in block this feature
+  if(!userId){
+    return res.status(403).send("Error 403: user not logged in")
+  }
+
+  const userInfo = urlsForUser(userId)
+  //if user tries to access a url that doesn't belong to him an error is sent back to client
+  if(!userInfo || Object.keys(userInfo).length === 0 || !userInfo[req.params.id]) {
+    return res.status(403).send("Error 403: short url does not exist or cannot be changed by this user");
+  }
+
+  const templateVars = { userId: users[req.cookies["user_id"]], id: req.params.id, longURL: userInfo[req.params.id]['longURL']}
+
   return res.render("urls_show", templateVars);
 });
 
 //This page is set as a link in the files urls_show and urls_index. when the links redirects to this page :id is replaced with the short url(that key value is accessed through the use of req.params.id)(a value is set to id: in the app.post("/urls") method declared above). The short url is a key corresponding to an actual url and this page redirects the client to the url value that corresponds to the short url key.
 app.get("/u/:id", (req, res) => {
-  const longURL = urlDatabase[req.params.id];
+  shortURL = req.params.id
+  const longURL = urlDatabase[shortURL]['longURL'];
   
   //if a short url that doesn't exist is accessed an error will be generated to handle this.
   for(let i in urlDatabase){
-    if(urlDatabase[i] === longURL){
-      console.log(urlDatabase[i])
+    if(urlDatabase[i]['longURL'] === longURL){
       return res.redirect(longURL);
     } 
   }
@@ -196,16 +228,31 @@ app.get("/u/:id", (req, res) => {
 
 //The rout below connects to a delete button and removes the corresponding url key pair from the urlDatabase object in the home page
 app.post("/urls/:id/delete", (req, res) => {
+  const userId = req.cookies['user_id']
   const shortURL = req.params.id;
+  const userInfo = urlsForUser(userId)
+
+  //if user tries to delete a url that doesn't belong to him an error is sent back to client
+  if(!userInfo || Object.keys(userInfo).length === 0 ) {
+    return res.status(403).send("Error 403: short url does not exist or cannot be changed by this user");
+  }
   delete urlDatabase[shortURL];
   return res.redirect(`/urls`);
 });
 
 //The rout below connects to an edit button redirecting the client to urls_show.ejs page where they can change the long url associated to the short url selected by the client. This edit button is located in the home page
 app.post("/urls/:id/edit", (req, res) => {
+  const userId = req.cookies['user_id']
   const shortURL = req.params.id;
-  const longURL = urlDatabase[shortURL];
-  urlDatabase[shortURL] = longURL;
+  const longURL = urlDatabase[shortURL]['longURL'];
+  const userInfo = urlsForUser(userId)
+
+  //if user tries to edit a url that doesn't belong to him an error is sent back to client
+  if(!userInfo || Object.keys(userInfo).length === 0 ) {
+    return res.status(403).send("Error 403: short url does not exist or cannot be changed by this user");
+  }
+
+  urlDatabase[shortURL]['longURL'] = longURL;
   return res.redirect(`/urls/${shortURL}`);
 });
 
@@ -220,7 +267,7 @@ app.post("/urls/:id/update", (req, res) => {
     return res.redirect(`/urls/${shortURL}`);
   }
   
-  urlDatabase[shortURL] = longURL;
+  urlDatabase[shortURL]['longURL'] = longURL;
 
   return res.redirect(`/urls`);
 });

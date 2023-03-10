@@ -34,32 +34,42 @@
             <th scope="col">Delete</th>
           </tr>
         </thead>
-        <tbody>
+        <% if(userId && Object.keys(userDatabase).length !== 0) { %>
+          <tbody>
 
-          <!-- for in loop through content in url key -->
-          <% for (let id in urls) { %>
-            <tr>
-              <!-- each short url is set as a link. The link is created in the server js file under the rout /u:id. href is a link set to go to page /u:id however the page u:id instantaneously redirects the client to the long url printed beside the short url-->
-              <td><a href="/u/<%= id %>"><%= id %></a></td>
-              <td style="max-width: 300px; overflow-wrap: break-word"><%= urls[id] %></td>
+            <!-- for in loop through content in urlDatabase -->
+            <% for (let id in userDatabase) { %>
+              <tr>
+                <!-- each short url is set as a link. The link is created in the server js file under the rout /u:id. href is a link set to go to page /u:id however the page u:id instantaneously redirects the client to the long url printed beside the short url-->
+                <td><a href="/u/<%= id %>"><%= id %></a></td>
+                <td style="max-width: 300px; overflow-wrap: break-word"><%= userDatabase[id]["longURL"] %></td>
 
-              <!-- The form contains a button redirects the client to urls_show.ejs -->
-              <td>
-                <form method="POST" action="/urls/<%= id %>/edit">
-                  <button type="submit" class="btn btn-outline-primary">Edit
-                  </button>
-                </form>
-              </td>
+                <!-- The form contains a button redirects the client to urls_show.ejs -->
+                <td>
+                  <form method="POST" action="/urls/<%= id %>/edit">
+                    <button type="submit" class="btn btn-outline-primary">Edit
+                    </button>
+                  </form>
+                </td>
 
-              <!-- The form contains a button that takes the short url and sends it to the server so that the key pair can be deleted from the urlDatabase object -->
-              <td>
-                <form method="POST" action="/urls/<%= id %>/delete">
-                  <button type="submit" class="btn btn-outline-danger">Delete
-                  </button>
-                </form>
-              </td>
-            </tr>
-          <% } %>
+                <!-- The form contains a button that takes the short url and sends it to the server so that the key pair can be deleted from the urlDatabase object -->
+                <td>
+                  <form method="POST" action="/urls/<%= id %>/delete">
+                    <button type="submit" class="btn btn-outline-danger">Delete
+                    </button>
+                  </form>
+                </td>
+              </tr>
+            <% } %>
+        <% } else if(Object.keys(userDatabase).length === 0) { %>
+          <div class="text-center">
+            <h6><a class="text-primary" a href="/urls/new">Create New URL</a></h6>
+          </div>
+        <% } else { %>
+          <div class="text-center">
+            <h6 class="text-danger">Login or Register</h6>
+          </div>
+        <% } %>
         </tbody>
       </table>
     </main>
