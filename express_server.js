@@ -50,6 +50,15 @@ app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
 
+//This rout redirects the user to /urls(if logged in) or /login(if not logged in)
+app.get("/", (req, res) => {
+  const userId = req.session.user_id
+  if(userId){
+    return res.redirect('/urls')
+  } 
+  return res.redirect('/urls/login')
+});
+
 //Render urls_index file to the browser. displays urlDatabase object in a neat way as a list within tables. This is the home page of the app
 app.get("/urls", (req, res) => {
 
@@ -175,20 +184,18 @@ app.post("/register", (req, res) => {
 //test example http://localhost:8080/urls/b2xVn2
 app.get("/urls/:id", (req, res) => {
   const userId = req.session.user_id
-                 
+
   //if user is not logged in block this feature
   if(!userId){
     return res.status(403).send("Error 403: user not logged in")
   }
-
+  const shortURL = req.params.id 
   const userInfo = helpers.urlsForUser(userId, urlDatabase)
   //if user tries to access a url that doesn't belong to him an error is sent back to client
-  if(!userInfo || Object.keys(userInfo).length === 0) {
+  if(!users[userId] || !userInfo[shortURL]) {
     return res.status(403).send("Error 403: short url does not exist or cannot be changed by this user");
   }
-
-  const templateVars = { userId: users[req.session.user_id], id: req.params.id, longURL: userInfo[req.params.id]['longURL'], loggedUser: users[userId]}
-
+  const templateVars = { userId: users[req.session.user_id], id: req.params.id, longURL: userInfo[req.params.id], loggedUser: users[userId]}
   return res.render("urls_show", templateVars);
 });
 
@@ -207,11 +214,15 @@ app.get("/u/:id", (req, res) => {
 //The rout below connects to a delete button and removes the corresponding url key pair from the urlDatabase object in the home page
 app.post("/urls/:id/delete", (req, res) => {
   const userId = req.session.user_id
-  const shortURL = req.params.id;
-  const userInfo = helpers.urlsForUser(userId, urlDatabase)
 
+  //if user is not logged in block this feature
+  if(!userId){
+    return res.status(403).send("Error 403: user not logged in")
+  }
+  const shortURL = req.params.id 
+  const userInfo = helpers.urlsForUser(userId, urlDatabase)
   //if user tries to delete a url that doesn't belong to him an error is sent back to client
-  if(!userInfo || Object.keys(userInfo).length === 0 || !userInfo[shortURL]) {
+  if(!users[userId] || !userInfo[shortURL]) {
     return res.status(403).send("Error 403: short url does not exist or cannot be changed by this user");
   }
   delete urlDatabase[shortURL];
@@ -221,15 +232,20 @@ app.post("/urls/:id/delete", (req, res) => {
 //The rout below connects to an edit button redirecting the client to urls_show.ejs page where they can change the long url associated to the short url selected by the client. This edit button is located in the home page
 app.post("/urls/:id/edit", (req, res) => {
   const userId = req.session.user_id
-  const shortURL = req.params.id;
-  const longURL = urlDatabase[shortURL]['longURL'];
-  const userInfo = helpers.urlsForUser(userId, urlDatabase)
 
+  //if user is not logged in block this feature
+  if(!userId){
+    return res.status(403).send("Error 403: user not logged in")
+  }
+
+  const shortURL = req.params.id 
+  const userInfo = helpers.urlsForUser(userId, urlDatabase)
   //if user tries to edit a url that doesn't belong to him an error is sent back to client
-  if(!userInfo || Object.keys(userInfo).length === 0 || !userInfo[shortURL]) {
+  if(!users[userId] || !userInfo[shortURL]) {
     return res.status(403).send("Error 403: short url does not exist or cannot be changed by this user");
   }
 
+  const longURL = urlDatabase[shortURL]['longURL'];
   urlDatabase[shortURL]['longURL'] = longURL;
   return res.redirect(`/urls/${shortURL}`);
 });
@@ -237,20 +253,20 @@ app.post("/urls/:id/edit", (req, res) => {
 //this .post rout handles info typed by the client in the urls_show.ejs, updating the long url referenced to a specified short url, this function can be accessed in the urls_show.ejs file page
 app.post("/urls/:id/update", (req, res) => {
   const userId = req.session.user_id
-  const shortURL = req.params.id;
-  const longURL = req.body.longURL;
-  
+
   //if user is not logged in block this feature
   if(!userId){
     return res.status(403).send("Error 403: user not logged in")
   }
-  
-  //if user tries to edit a url that doesn't belong to him an error is sent back to client
+
+  const shortURL = req.params.id 
   const userInfo = helpers.urlsForUser(userId, urlDatabase)
-  if(!userInfo || Object.keys(userInfo).length === 0 || !userInfo[shortURL]) {
+  //if user tries to edit a url that doesn't belong to him an error is sent back to client
+  if(!users[userId] || !userInfo[shortURL]) {
     return res.status(403).send("Error 403: short url does not exist or cannot be changed by this user");
   }
 
+  const longURL = req.body.longURL;
   urlDatabase[shortURL]['longURL'] = longURL;
   return res.redirect(`/urls`);
 });
