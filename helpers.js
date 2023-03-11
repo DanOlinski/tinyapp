@@ -10,7 +10,7 @@ const getUserByEmail = function(email, usersDatabase) {
   return null;
 };
 
-//this function generates a random string of 6 characters
+//this function generates a random string of 6 characters. Used when generating a new ID of a user and for generating a short url.
 const generateRandomString = function() {
   let result = '';
   const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -25,13 +25,13 @@ const generateRandomString = function() {
 
 //The function below checks the a database passed in and returns the urls that were saved by a specific user(the user is identified through it's id)
 const urlsForUser = function(id, dataBase) {
-  const data = {}
-  for(let i in dataBase){
-    if(id === dataBase[i]['userId']) {
-      data[i] = dataBase[i]
+  const data = {};
+  for (let i in dataBase) {
+    if (id === dataBase[i]['userId']) {
+      data[i] = dataBase[i];
     }
   }
-  return data  
-}
+  return data;
+};
 
-module.exports = { getUserByEmail, generateRandomString, urlsForUser }
+module.exports = { getUserByEmail, generateRandomString, urlsForUser };
