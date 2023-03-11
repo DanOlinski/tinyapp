@@ -7,8 +7,9 @@ const bcrypt = require("bcryptjs");
 //This module handles information saved as cookies. This module has the added benefit of encrypting the cookies.
 let cookieSession = require('cookie-session');
 
-//the app.get and app.post functions below have to be placed in the correct order since one function depends on the next
+const helpers = require("./helpers")
 
+//the app.get and app.post functions below have to be placed in the correct order since one function depends on the next
 const app = express();
 const PORT = 8080;
 
@@ -44,42 +45,6 @@ const users = {
   },
 };
 
-//this function generates a random string of 6 characters
-const generateRandomString = function() {
-  let result = '';
-  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  const charactersLength = characters.length;
-  let counter = 0;
-  while (counter < 6) {
-    result += characters.charAt(Math.floor(Math.random() * charactersLength));
-    counter += 1;
-  }
-  return result;
-};
-
-//The function checks if an email exists in the users object. If the user does exist it returns the information of that user, otherwise it returns null
-const userLookup = function(email) {
-  for (let i in users) {
-    for (let j in users[i]) {
-      if (users[i][j] === email && email !== '') {
-        return users[i];
-      }
-    }
-  }
-  return null;
-};
-
-//The function below checks the urlsDatabase and returns the urls that were saved by a specific user
-const urlsForUser = function(id) {
-  const data = {}
-  for(let i in urlDatabase){
-    if(id === urlDatabase[i]['userId']) {
-      data[i] = urlDatabase[i]
-    }
-  }
-  return data  
-}
-
 //the method below sets the server to listen at a predefined port
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
@@ -92,10 +57,10 @@ app.get("/urls", (req, res) => {
   //if you wanted to save a value as a cookie file use: req.session.user_id = id (the last id is a variable that holds the value you want to save as a cookie)
   //To clear all cookies: req.session = null
   const userId = req.session.user_id
-  const userDatabase = urlsForUser(userId)
+  const userDatabase = helpers.urlsForUser(userId, urlDatabase)
   
   //The object below stores the user key(it's retrieving this info from the cookie files through the use of cookie-parser npm package, this info is called in the _header.ejs file)
-  const templateVars = { 'userId': userId, 'userDatabase': userDatabase };
+  const templateVars = { userId, userDatabase, loggedUser: users[userId] };
   return res.render("urls_index", templateVars);
 });
 
@@ -119,9 +84,9 @@ app.post("/login", (req, res) => {
   //this statement handles errors (empty fields)
   if (!emailInput || !passwordInput) {
     return res.status(400).send("Error 400: Empty field(s)");
-  }
+  } 
  
-  const userId = userLookup(emailInput)
+  const userId = helpers.getUserByEmail(emailInput, users)
   //this statement handles errors (user not registered)
   if (userId === null) {
     return res.status(403).send("Error 403: User not registered");
@@ -144,7 +109,8 @@ app.post("/logout", (req, res) => {
 
 //Render a page with a box for the user to enter data. in the page /urls/new there is a button that sends that data back to the server using post method
 app.get("/urls/new", (req, res) => {
-  const templateVars = { userId: users[req.session.user_id] };
+  const userId = req.session.user_id
+  const templateVars = { userId, loggedUser: users[userId] };
 
   //if user is not logged in block urls/new page
   if(!templateVars.userId){
@@ -155,7 +121,7 @@ app.get("/urls/new", (req, res) => {
 
 //Handle the data sent from client to the server, this data is coming from page /urls/new or file urls_new.ejs The data received is saved in the object urlDatabase, then client is redirected to /urls/:id contained in urls_show.ejs file
 app.post("/urls", (req, res) => {
-  const shortURL = generateRandomString();
+  const shortURL = helpers.generateRandomString();
   const loggedUser = req.session.user_id
   
   //if user is not logged in, block the feature from this .post method by redirecting to /urls where there is a message asking user to login or register.
@@ -185,7 +151,7 @@ app.post("/register", (req, res) => {
   const hashedPassword = bcrypt.hashSync(password, 10);
 
   //this statement handles errors (user already registered)
-  if (userLookup(email)) {
+  if (helpers.getUserByEmail(email, users)) {
     return res.status(400).send("Error 400: user already registered");
   }
   
@@ -194,7 +160,7 @@ app.post("/register", (req, res) => {
     return res.status(400).send("Error 400: empty field(s)");
   } else {
     //this function generates a random string ans stores that string as a unique ID for the user
-    let id = generateRandomString();
+    let id = helpers.generateRandomString();
     users[id] = { 'id': id, 'email': email, 'password': hashedPassword};
 
     //the code below saves the id values into an encrypted cookie file
@@ -204,7 +170,7 @@ app.post("/register", (req, res) => {
   }
 });
 
-//:id works as an argument/variable/placeholder. :id = req.params.id
+//:id works as an argument/variable/placeholder/abstraction(also called resource or REST or RESTful or REST API end point where API refers to the url of the rout). :id = req.params.id
 //The page below is accessed when clicking the submit button in page /urls/new(that is where a key pair is created, the key is passed as the :id when redirected to this page (a value is set to id: in the app.post("/urls") method declared above). Also check note in urls_show with ****).
 //test example http://localhost:8080/urls/b2xVn2
 app.get("/urls/:id", (req, res) => {
@@ -215,13 +181,13 @@ app.get("/urls/:id", (req, res) => {
     return res.status(403).send("Error 403: user not logged in")
   }
 
-  const userInfo = urlsForUser(userId)
+  const userInfo = helpers.urlsForUser(userId, urlDatabase)
   //if user tries to access a url that doesn't belong to him an error is sent back to client
   if(!userInfo || Object.keys(userInfo).length === 0) {
     return res.status(403).send("Error 403: short url does not exist or cannot be changed by this user");
   }
 
-  const templateVars = { userId: users[req.session.user_id], id: req.params.id, longURL: userInfo[req.params.id]['longURL']}
+  const templateVars = { userId: users[req.session.user_id], id: req.params.id, longURL: userInfo[req.params.id]['longURL'], loggedUser: users[userId]}
 
   return res.render("urls_show", templateVars);
 });
@@ -242,7 +208,7 @@ app.get("/u/:id", (req, res) => {
 app.post("/urls/:id/delete", (req, res) => {
   const userId = req.session.user_id
   const shortURL = req.params.id;
-  const userInfo = urlsForUser(userId)
+  const userInfo = helpers.urlsForUser(userId, urlDatabase)
 
   //if user tries to delete a url that doesn't belong to him an error is sent back to client
   if(!userInfo || Object.keys(userInfo).length === 0 || !userInfo[shortURL]) {
@@ -257,7 +223,7 @@ app.post("/urls/:id/edit", (req, res) => {
   const userId = req.session.user_id
   const shortURL = req.params.id;
   const longURL = urlDatabase[shortURL]['longURL'];
-  const userInfo = urlsForUser(userId)
+  const userInfo = helpers.urlsForUser(userId, urlDatabase)
 
   //if user tries to edit a url that doesn't belong to him an error is sent back to client
   if(!userInfo || Object.keys(userInfo).length === 0 || !userInfo[shortURL]) {
@@ -274,15 +240,13 @@ app.post("/urls/:id/update", (req, res) => {
   const shortURL = req.params.id;
   const longURL = req.body.longURL;
   
-  console.log(userId)
-  
   //if user is not logged in block this feature
   if(!userId){
     return res.status(403).send("Error 403: user not logged in")
   }
   
   //if user tries to edit a url that doesn't belong to him an error is sent back to client
-  const userInfo = urlsForUser(userId)
+  const userInfo = helpers.urlsForUser(userId, urlDatabase)
   if(!userInfo || Object.keys(userInfo).length === 0 || !userInfo[shortURL]) {
     return res.status(403).send("Error 403: short url does not exist or cannot be changed by this user");
   }
